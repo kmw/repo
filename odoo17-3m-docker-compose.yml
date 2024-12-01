@@ -1,0 +1,188 @@
+version: '3.8'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=myodoo
+      - POSTGRES_DB=postgres
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    command: >
+      postgres 
+      -c max_connections=300
+      -c shared_buffers=512MB
+      -c work_mem=16MB
+    volumes:
+      - odoo17-3m-db-data:/var/lib/postgresql/data/pgdata
+    networks:
+      - odoo-internal
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 2G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  odoo1:
+    depends_on:
+      - postgres
+    image: odoo:17.0
+    user: "101:101"
+    command: odoo --workers=2 --max-cron-threads=1 --log-level=info
+    volumes:
+      - odoo17-3m-web1-data:/var/lib/odoo
+      - /home/kmw/config/odoo1:/etc/odoo
+      - /home/kmw/extra-addons:/mnt/extra-addons
+    environment:
+      - HOST=postgres
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=myodoo
+      - DB_FILTER=^domain0.*
+
+    networks:
+      - traefik-public
+      - odoo-internal
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.odoo1.rule=Host(`domain.change`)"
+        - "traefik.http.routers.odoo1.entrypoints=websecure"
+        - "traefik.http.routers.odoo1.tls=true"
+        - "traefik.http.routers.odoo1.tls.certresolver=letsencrypt"
+        - "traefik.http.services.odoo1.loadbalancer.server.port=8069"
+        - "traefik.http.services.odoo1.loadbalancer.sticky.cookie=true"
+        - "traefik.http.services.odoo1.loadbalancer.sticky.cookie.name=odoo_session"
+        - "traefik.http.services.odoo1.loadbalancer.healthcheck.path=/web/health"
+        - "traefik.http.services.odoo1.loadbalancer.healthcheck.interval=10s"
+        - "traefik.http.services.odoo1.loadbalancer.healthcheck.timeout=5s"
+        - "traefik.docker.network=traefik-public"
+
+  odoo2:
+    depends_on:
+      - postgres
+    image: odoo:17.0
+    user: "101:101"
+    command: odoo --workers=2 --max-cron-threads=1 --log-level=info
+    volumes:
+      - odoo17-3m-web2-data:/var/lib/odoo
+      - /home/kmw/config/odoo2:/etc/odoo
+      - /home/kmw/extra-addons:/mnt/extra-addons
+    environment:
+      - HOST=postgres
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=myodoo
+      - DB_FILTER=^domain1.*
+      
+    networks:
+      - traefik-public
+      - odoo-internal
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.odoo2.rule=Host(`domain1.1`)"
+        - "traefik.http.routers.odoo2.entrypoints=websecure"
+        - "traefik.http.routers.odoo2.tls=true"
+        - "traefik.http.routers.odoo2.tls.certresolver=letsencrypt"
+        - "traefik.http.services.odoo2.loadbalancer.server.port=8069"
+        - "traefik.http.services.odoo2.loadbalancer.sticky.cookie=true"
+        - "traefik.http.services.odoo2.loadbalancer.sticky.cookie.name=odoo_session"
+        - "traefik.http.services.odoo2.loadbalancer.healthcheck.path=/web/health"
+        - "traefik.http.services.odoo2.loadbalancer.healthcheck.interval=10s"
+        - "traefik.http.services.odoo2.loadbalancer.healthcheck.timeout=5s"
+        - "traefik.docker.network=traefik-public"
+
+  odoo3:
+    depends_on:
+      - postgres
+    image: odoo:17.0
+    user: "101:101"
+    command: odoo --workers=2 --max-cron-threads=1 --log-level=info
+    volumes:
+      - odoo17-3m-web3-data:/var/lib/odoo
+      - /home/kmw/config/odoo3:/etc/odoo
+      - /home/kmw/extra-addons:/mnt/extra-addons
+    environment:
+      - HOST=postgres
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=myodoo
+      - DB_FILTER=^domain.*
+
+    networks:
+      - traefik-public
+      - odoo-internal
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.odoo3.rule=Host(`domain.1`)"
+        - "traefik.http.routers.odoo3.entrypoints=websecure"
+        - "traefik.http.routers.odoo3.tls=true"
+        - "traefik.http.routers.odoo3.tls.certresolver=letsencrypt"
+        - "traefik.http.services.odoo3.loadbalancer.server.port=8069"
+        - "traefik.http.services.odoo3.loadbalancer.sticky.cookie=true"
+        - "traefik.http.services.odoo3.loadbalancer.sticky.cookie.name=odoo_session"
+        - "traefik.http.services.odoo3.loadbalancer.healthcheck.path=/web/health"
+        - "traefik.http.services.odoo3.loadbalancer.healthcheck.interval=10s"
+        - "traefik.http.services.odoo3.loadbalancer.healthcheck.timeout=5s"
+        - "traefik.docker.network=traefik-public"
+
+volumes:
+  odoo17-3m-db-data:
+    driver: local
+  odoo17-3m-web1-data:
+    driver: local
+  odoo17-3m-web2-data:
+    driver: local
+  odoo17-3m-web3-data:
+    driver: local
+
+networks:
+  odoo-internal:
+    driver: overlay
+    attachable: true
+    internal: true
+  traefik-public:
+    external: true
