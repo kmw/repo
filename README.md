@@ -1,4 +1,4 @@
-Deploying the 2 x Odoo 18 setup:
+Deploying the 1 or 2 Odoo-18 each w/ Postgresql-17 setup via Portainer Stack / Git Repository:
 
 1. Clone the repository:
 ```bash
