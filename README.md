@@ -38,5 +38,3 @@ note: /home/kmw is set but you may want to change it.
 - Set compose file path to docker-compose.yml.dual
 - Upload stack.env
 - Deploy the stack
-
-Would you like me to show any specific part in more detail?
