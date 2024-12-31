@@ -75,3 +75,20 @@ The variable substitution process:
 2. Docker Compose uses these variables in `docker-compose.yml.dual`
 3. Variables are passed to containers through environment section
 4. Odoo reads its config files and substitutes variables at runtime
+
+The stack.env file and odoo.conf files serve different purposes:
+
+Git repository deployment:
+stack.env: Upload separately in Portainer
+odoo.conf files: Must be in repository under config/
+
+Manual stack creation:
+stack.env: Upload in Portainer
+odoo.conf: Must exist on host or in volume
+You can't include odoo.conf in stack.env, but you can:
+
+Add config files to git repository
+Use config directory in docker volume
+Use bind mounts to host config directory
+Use Docker configs (swarm feature)
+Best practice: Keep configs in git repository under config/ directory for version control and deployment consistency.
